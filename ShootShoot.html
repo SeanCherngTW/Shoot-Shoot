@@ -1,0 +1,190 @@
+<!--12/26.27/2015 黑客松-->
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Shoot! Shoot!</title>
+    <style>
+        body{background-image:url("./images/124.jpg");background-size: cover;}
+        title{{font-family:Palatino Linotype;}}
+        img{width:120px; height:120px}
+    </style>
+</head>
+<body onload="reSize()" onresize="reSize()" >  
+    <div id="title"><h1><center><font color="#4d004a" size="20">SHOOT! SHOOT!</font></center></h1></div>
+    <div style="text-align:center">
+        <canvas id="frame"
+                style="border:10px solid #4d004a"
+                onmousedown="whichElement(event)">
+        </canvas></div>
+    <br>
+    <div style="text-align:center">
+    <button type="button" 
+            id="easyButton"
+            onclick="run(this.id)"><img class="imgButton" src="./images/EASY.png"></button>
+    
+    <button type="button" 
+            id="normalButton"
+            onclick="run(this.id)"><img class="imgButton" src="./images/NORMAL.png"></button>
+    
+    <button type="button" 
+            id="hardButton"
+            onclick="run(this.id)"><img class="imgButton" src="./images/HARD.png"></button>
+        
+    <button type="button"
+            id="helpButton"
+            onclick="help()"><img class="imgButton" src="./images/HELP.png"></button> 
+    
+    <button type="button"
+            id="checkButton"
+            disabled="true"
+            onclick="checkResult()"><img class="imgButton" src="./images/CHECK.png"></button>
+    
+    <button type="button"
+            id="resetButton"
+            disabled="true"
+            onclick="location.reload()"><img class="imgButton" src="./images/RESET.png"></button>
+    </div>
+    <script>
+        var c4 = document.getElementById("frame");
+        var cxt4 = c4.getContext("2d");
+        var x = [];             //球的X軸初始位置
+        var y = [];             //球的Y軸初始位置
+        var a = 0;              //決定出球方向(0:左右側出球、1:上下側出球)
+        var flag = 0;           //判斷是否產生新球(0:產生、1:不產生)
+        var speed = 0;          //球的飛行速度
+        var moveX = [];         //每單位時間球的水平飛行距離
+        var moveY = [];         //每單位時間球的垂直飛行距離
+        var amount = 0;         //球的序次(用於陣列)
+        var totalBalls = 0;     //球的總數量(答案)
+        var clickCount = 0;     //使用者按了幾次左鍵?(使用者輸入的答案)
+        var img = new Image();
+        img.src = "./images/08.png";
+        
+      //WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+        function reSize()
+        {
+            document.getElementById("frame").width = innerWidth * 0.7;
+            document.getElementById("frame").height = innerHeight * 0.7;  
+            
+            /*/document.getElementById("easyButton").width = innerWidth * 0.1;
+            document.getElementById("normalButton").width = innerWidth * 0.1;
+            document.getElementById("hardButton").width = innerWidth * 0.1;
+            document.getElementById("helpButton").width = innerWidth * 0.1;
+            document.getElementById("checkButton").width = innerWidth * 0.1;
+            document.getElementById("resetButton").width = innerWidth * 0.1;
+            
+            document.getElementById("easyButton").height = innerHeight * 0.1;
+            document.getElementById("normalButton").height = innerHeight * 0.1;
+            document.getElementById("hardButton").height = innerHeight * 0.1;
+            document.getElementById("helpButton").height = innerHeight * 0.1;
+            document.getElementById("checkButton").height = innerHeight * 0.1;
+            document.getElementById("resetButton").height = innerHeight * 0.1;
+            
+            document.getElementsByClassName("imgButton").width = innerWidth * 0.1;
+            document.getElementsByClassName("imgButton").height = innerHeight */
+        }
+      
+        function run(clickedID) 
+        {
+            if(clickedID == "easyButton"){totalBalls = Math.floor((Math.random()*2)+1);}
+            if(clickedID == "normalButton"){totalBalls = Math.floor((Math.random()*3)+3);}
+            if(clickedID == "hardButton"){totalBalls = Math.floor((Math.random()*6)+5);}
+            //讀取使用者點擊的難度
+            
+            document.getElementById("easyButton").disabled = true;
+            document.getElementById("normalButton").disabled = true;
+            document.getElementById("hardButton").disabled = true;
+            document.getElementById("helpButton").disabled = true;
+            document.getElementById("checkButton").disabled = false;
+            document.getElementById("resetButton").disabled = false;
+            //把選擇難度按鈕設為不可按，檢查及重來按鈕設為可以按
+
+            speed = Math.floor((Math.random()*20));
+            intervalID = window.setInterval(setStartPoint, speed);
+        }   
+        
+        function setStartPoint()
+        {//初始化所有球並移動
+           if(flag == 0){
+               for (amount = 0 ; amount < totalBalls ; amount++){
+                a = Math.floor((Math.random()*2));
+                if (a == 0){//左右兩側出球
+                    x[amount] = Math.floor((Math.random()*2));
+                    y[amount] = Math.floor((Math.random()*frame.height));
+                    
+                    if (x[amount] == 0){//左側出球
+                        x[amount] = 0;
+                        moveX[amount] = Math.floor((Math.random()*10));
+                        
+                        if (y[amount] > frame.height/2 ){moveY[amount] = -Math.floor((Math.random()*10));}
+                        else{moveY[amount] = Math.floor((Math.random()*10));}
+                    }
+                    else{//右側出球
+                        x[amount] = frame.width;
+                        moveX[amount] = -Math.floor((Math.random()*5)+20);
+                        
+                        if (y[amount] > frame.height/2){moveY[amount] = -Math.floor((Math.random()*10));}
+                        else{moveY[amount] = Math.floor((Math.random()*10));}
+                    }   
+                }//end if
+            
+                if (a == 1){//上下兩側出球
+                    x[amount] = Math.floor((Math.random()*frame.width));
+                    y[amount] = Math.floor((Math.random()*2));
+                    
+                    if(y[amount] == 0){//上側出球
+                        y[amount] = 0;
+                        
+                        if (x[amount] > frame.width/2){moveX[amount] = -Math.floor((Math.random()*10));}
+                        else{moveX[amount] = Math.floor((Math.random()*10));}
+                        
+                        moveY[amount] = Math.floor((Math.random()*4)+10);
+                    }
+                    else{//下側出球
+                        y[amount] = frame.height;
+                        moveX[amount] = 0;
+                        
+                        if (x[amount] > frame.width/2){moveX[amount] = -Math.floor((Math.random()*10));}
+                        else{moveX[amount] = Math.floor((Math.random()*10));}
+                        
+                        moveY[amount] = -Math.floor((Math.random()*15));
+                    }
+                }//end if
+               }//end for
+               flag = flag + 1;
+           }//end if(flag==0)
+            cxt4.clearRect(0,0,frame.width,frame.height);
+            
+            for (amount = 0; amount < totalBalls; amount++){
+                cxt4.drawImage(img,x[amount],y[amount],50,50);
+                x[amount] = x[amount] + moveX[amount];
+                y[amount] = y[amount] + moveY[amount]; 
+            }// end for
+        }//end function setStartPoint()
+        
+        function whichElement(e) 
+        {//偵測滑鼠點擊
+            var targ;
+            if (e.target) {targ=e.target;}         
+            clickCount++;
+        }//end function whichElement(e)
+        
+        function checkResult()
+        {//判斷使用者有無答對
+            if (clickCount == totalBalls){
+                alert("CLEAR!\nThere are " + totalBalls + " Ball(s)!");
+                location.reload();
+            }
+            else{
+                alert("FAIL!\nThere are " + totalBalls + " Ball(s)!");
+                location.reload();
+            }
+        }//end function checkResult()
+        
+        function help(){
+            alert("玩法說明：\n選擇難易度後，遊戲會立即開始，判斷總共有幾顆球飛越畫板，在畫板內按下相同次數的左鍵，確認答案後按綠色勾送出答案");
+        }//end function help()
+    </script>
+</body>
+</html>
